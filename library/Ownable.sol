@@ -20,7 +20,7 @@ contract Ownable
         _;
     }
 
-    function GetOwner() public view returns (address)
+    function GetOwner() external view returns (address)
     {
         return Owner;
     }

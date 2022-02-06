@@ -56,4 +56,9 @@ library Math
     {
         Result = A < B ? A : B;
     }
+
+    function Max(uint256 A, uint256 B) internal pure returns (uint256 Result)
+    {
+        Result = A > B ? A : B;
+    }
 }

@@ -8,21 +8,21 @@ contract WhiteList is Ownable
 {
     mapping(address => bool) private Storage;
 
-    function Add(address account) public OnlyOwner
+    function Add(address account) internal OnlyOwner
     {
         Storage[account] = true;
 
         emit AddToWhiteList(account);
     }
 
-    function Remove(address account) public OnlyOwner
+    function Remove(address account) internal OnlyOwner
     {
         Storage[account] = false;
 
         emit RemoveFromWhiteList(account);
     }
 
-    function IsInWhiteList(address account) external view returns(bool)
+    function IsInWhiteList(address account) public view returns(bool)
     {
         return Storage[account];
     }

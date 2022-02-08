@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.6;
 
-import "./Library/Math.sol";
-import "./Interface/IBEP20.sol";
+import "./library/Math.sol";
+import "./interface/IBEP20.sol";
 
 contract Coin is IBEP20
 {
@@ -19,37 +19,37 @@ contract Coin is IBEP20
         emit Transfer(address(0), msg.sender, 100000000000 ether);
     }
 
-    function decimals() external pure returns (uint8)
+    function decimals() override external pure returns (uint8)
     {
         return 18;
     }
 
-    function getOwner() external pure returns (address)
+    function getOwner() override external pure returns (address)
     {
         return address(0);
     }
 
-    function name() external pure returns (string memory)
+    function name() override external pure returns (string memory)
     {
         return "Guardian";
     }
 
-    function totalSupply() external pure returns (uint256)
+    function totalSupply() override external pure returns (uint256)
     {
         return 100000000000 ether;
     }
 
-    function symbol() external pure returns (string memory)
+    function symbol() override external pure returns (string memory)
     {
         return "G";
     }
 
-    function balanceOf(address account) external view returns (uint256)
+    function balanceOf(address account) override external view returns (uint256)
     {
         return Balance[account];
     }
 
-    function approve(address spender, uint256 amount) external returns (bool)
+    function approve(address spender, uint256 amount) override external returns (bool)
     {
         Allowance[msg.sender][spender] = amount;
 
@@ -58,7 +58,7 @@ contract Coin is IBEP20
         return true;
     }
 
-    function transfer(address recipient, uint256 amount) external returns (bool)
+    function transfer(address recipient, uint256 amount) override external returns (bool)
     {
         Balance[msg.sender] = Balance[msg.sender].Sub(amount);
 
@@ -69,12 +69,12 @@ contract Coin is IBEP20
         return true;
     }
 
-    function allowance(address owner, address spender) external view returns (uint256)
+    function allowance(address owner, address spender) override external view returns (uint256)
     {
         return Allowance[owner][spender];
     }
 
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool)
+    function transferFrom(address sender, address recipient, uint256 amount) override external returns (bool)
     {
         Balance[sender] = Balance[sender].Sub(amount);
 

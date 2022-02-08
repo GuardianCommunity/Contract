@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.6;
 
 import "../library/Math.sol";
 import "../library/Ownable.sol";
@@ -9,7 +9,7 @@ import "../library/WhiteList.sol";
 import "../interface/IBEP20.sol";
 import "../interface/AggregatorV3Interface.sol";
 
-contract Core is Ownable, WhiteList
+contract Lend is Ownable, WhiteList
 {
     using Math for uint256;
 
@@ -24,6 +24,7 @@ contract Core is Ownable, WhiteList
     function Deposit(IBEP20 token, uint256 amount) public
     {
         require(amount > 0, "Deposit: Amount");
+        require(IsInWhiteList(address(token)), "Deposit: WhiteList");
         require(token.allowance(msg.sender, address(this)) >= amount, "Deposit: Approve");
 
         token.transferFrom(msg.sender, address(this), amount);

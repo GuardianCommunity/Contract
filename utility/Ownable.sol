@@ -10,7 +10,7 @@ contract Ownable
     {
         Owner = msg.sender;
 
-        emit OwnershipTransferred(address(0), Owner);
+        emit OwnerChanged(address(0), Owner);
     }
 
     modifier OnlyOwner()
@@ -29,8 +29,8 @@ contract Ownable
     {
         Owner = NewOwner;
 
-        emit OwnershipTransferred(Owner, NewOwner);
+        emit OwnerChanged(Owner, NewOwner);
     }
 
-    event OwnershipTransferred(address indexed PreviousOwner, address indexed NewOwner);
+    event OwnerChanged(address indexed PreviousOwner, address indexed NewOwner);
 }

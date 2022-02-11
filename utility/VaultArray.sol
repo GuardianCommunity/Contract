@@ -70,4 +70,14 @@ contract VaultArray
             }
         }
     }
+
+    function Balance() public view returns (address[] memory Token, uint256[] memory Value)
+    {
+        for (uint256 I = 0; I < Storage.length; I++)
+        {
+            Token[I] = Storage[I].Token;
+
+            Value[I] = Storage[I].Value;
+        }
+    }
 }

@@ -2,27 +2,25 @@
 
 pragma solidity ^0.8.6;
 
-import "./Ownable.sol";
-
-contract WhiteList is Ownable
+abstract contract WhiteList
 {
     mapping(address => bool) private Storage;
 
-    function Add(address account) internal OnlyOwner
+    function Add(address account) internal
     {
         Storage[account] = true;
 
         emit AddToWhiteList(account);
     }
 
-    function Remove(address account) internal OnlyOwner
+    function Remove(address account) internal
     {
         Storage[account] = false;
 
         emit RemoveFromWhiteList(account);
     }
 
-    function IsInWhiteList(address account) public view returns(bool)
+    function IsInWhiteList(address account) internal view returns(bool)
     {
         return Storage[account];
     }

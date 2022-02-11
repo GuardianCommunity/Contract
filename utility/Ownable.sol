@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.6;
 
-contract Ownable
+abstract contract Ownable
 {
     address private Owner;
 
@@ -20,16 +20,11 @@ contract Ownable
         _;
     }
 
-    function GetOwner() external view returns (address)
+    function Transfer(address NewOwner) external OnlyOwner
     {
-        return Owner;
-    }
-
-    function TransferOwnership(address NewOwner) public OnlyOwner
-    {
-        Owner = NewOwner;
-
         emit OwnerChanged(Owner, NewOwner);
+
+        Owner = NewOwner;
     }
 
     event OwnerChanged(address indexed PreviousOwner, address indexed NewOwner);

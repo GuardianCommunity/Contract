@@ -4,12 +4,11 @@ pragma solidity ^0.8.6;
 
 import "./library/Math.sol";
 
+import "./utility/Array.sol";
 import "./utility/Ownable.sol";
-import "./utility/VaultArray.sol";
 
 import "./interface/IBEP20.sol";
 import "./interface/AggregatorV3Interface.sol";
-
 
 contract Lend is Ownable
 {
@@ -17,9 +16,8 @@ contract Lend is Ownable
 
     struct Vault
     {
-        VaultArray Deposit;
+        Array Supply;
     }
-
 
     mapping(address => Vault) private Storage;
 
@@ -31,12 +29,12 @@ contract Lend is Ownable
 
         IBEP20(token).transferFrom(msg.sender, address(this), amount);
 
-        Storage[msg.sender].Deposit.Increase(token, amount);
+        Storage[msg.sender].Supply.Increase(token, amount);
     }
 
     function Credit() public view returns (uint256)
     {
-        (address[] memory Token, int256[] memory Value) = Storage[msg.sender].Deposit.Balance();
+        (address[] memory Token, uint256[] memory Value) = Storage[msg.sender].Supply.Balance();
 
         uint256 Result = 0;
 
@@ -47,32 +45,27 @@ contract Lend is Ownable
             if (Price == -1)
                 continue;
 
-            Result = Result + (uint256) (Price * Value[I]);
+            Result += uint256(Price) * Value[I]; // Fix the correct calculation
         }
 
         return Result;
     }
 
-    // ChainLink Aggregator
+    // ChainLink Aggregator Map
     mapping(address => address) private AggregatorMap;
 
-    function AddToAggregator(address token, address oracle) external
+    function AddToAggregatorMap(address token, address oracle) external OnlyOwner
     {
-        require(token != address(0), "AddToAggregator: Token");
-        require(oracle != address(0), "AddToAggregator: Oracle");
-
         AggregatorMap[token] = oracle;
 
-        emit AddedToAggregator(token, oracle);
+        emit AddedToAggregatorMap(token, oracle);
     }
 
-    function RemoveFromAggregator(address token) external
+    function RemoveFromAggregator(address token) external OnlyOwner
     {
-        require(token != address(0), "RemoveFromAggregator: Token");
-
         delete AggregatorMap[token];
 
-        emit RemovedFromAggregator(token);
+        emit RemovedFromAggregatorMap(token);
     }
 
     function AggregatorPrice(address token) public view returns (int256 Result)
@@ -80,38 +73,36 @@ contract Lend is Ownable
         address oracle = AggregatorMap[token];
 
         if (oracle == address(0))
-        {
             return -1;
-        }
 
         (, Result, , ,) = AggregatorV3Interface(oracle).latestRoundData();
     }
 
-    event RemovedFromAggregator(address indexed Oracle);
-    event AddedToAggregator(address indexed Token, address indexed Oracle);
+    event RemovedFromAggregatorMap(address indexed oracle);
+    event AddedToAggregatorMap(address indexed token, address indexed oracle);
 
-    // Oracle
-    mapping(address => bool) private OracleMap;
+    // Borrow Map
+    mapping(address => bool) private BorrowMap;
 
-    function AddToOracle(address account) external
+    function AddToBorrowMap(address token) external OnlyOwner
     {
-        OracleMap[account] = true;
+        BorrowMap[token] = true;
 
-        emit AddedToOracle(account);
+        emit AddedToBorrowMap(token);
     }
 
-    function RemoveFromOracle(address account) external
+    function RemoveFromBorrowMap(address token) external OnlyOwner
     {
-        OracleMap[account] = false;
+        BorrowMap[token] = false;
 
-        emit RemovedFromOracle(account);
+        emit RemovedFromBorrowMap(token);
     }
 
-    function IsInOracle(address account) public view returns(bool)
+    function IsInBorrowMap(address token) public view returns(bool)
     {
-        return OracleMap[account];
+        return BorrowMap[token];
     }
 
-    event AddedToOracle(address indexed account);
-    event RemovedFromOracle(address indexed account);
+    event AddedToBorrowMap(address indexed token);
+    event RemovedFromBorrowMap(address indexed token);
 }

@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.6;
 
-contract VaultArray
+contract Array
 {
     struct Entity
     {

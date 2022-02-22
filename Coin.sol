@@ -14,9 +14,9 @@ contract Coin is IBEP20
 
     constructor()
     {
-        Balance[msg.sender] = 100000000000 ether;
+        Balance[msg.sender] = 1000000000000 ether;
 
-        emit Transfer(address(0), msg.sender, 100000000000 ether);
+        emit Transfer(address(0), msg.sender, 1000000000000 ether);
     }
 
     function decimals() override external pure returns (uint8)
@@ -36,7 +36,7 @@ contract Coin is IBEP20
 
     function totalSupply() override external pure returns (uint256)
     {
-        return 100000000000 ether;
+        return 1000000000000 ether;
     }
 
     function symbol() override external pure returns (string memory)
@@ -78,11 +78,11 @@ contract Coin is IBEP20
     {
         Balance[sender] = Balance[sender].Sub(amount);
 
+        Allowance[sender][msg.sender] = Allowance[sender][msg.sender].Sub(amount);
+
         Balance[recipient] = Balance[recipient].Add(amount);
 
         emit Transfer(sender, recipient, amount);
-
-        Allowance[sender][msg.sender] = Allowance[sender][msg.sender].Sub(amount);
 
         emit Approval(sender, msg.sender, amount);
 

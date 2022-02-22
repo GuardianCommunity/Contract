@@ -2,56 +2,82 @@
 
 pragma solidity ^0.8.6;
 
-import "./library/Math.sol";
-
-import "./utility/Array.sol";
-import "./utility/Ownable.sol";
-
 import "./interface/IBEP20.sol";
+import "./interface/IAdministrator.sol";
 import "./interface/AggregatorV3Interface.sol";
 
-contract Lend is Ownable
+import "./library/Math.sol";
+
+contract Lend
 {
     using Math for uint256;
 
-    struct Vault
+    uint256 private FACTOR;
+
+    address private TOKEN;
+    address private ORACLE;
+    address private TREASUERY;
+
+    constructor()
     {
-        Array Supply;
+        FACTOR = 10;
+
+        TOKEN = address(0);
+        ORACLE = address(0);
+        TREASUERY = address(0);
     }
 
-    mapping(address => Vault) private Storage;
+    mapping(address => uint256) private SupplyStorage;
 
-    function Deposit(address token, uint256 amount) public
+    function Supply(uint256 amount) external
     {
-        require(amount > 0, "Deposit: Amount");
+        require(IBEP20(TOKEN).allowance(msg.sender, address(this)) >= amount, "Supply: Approve");
 
-        require(IBEP20(token).allowance(msg.sender, address(this)) >= amount, "Deposit: Approve");
+        SupplyStorage[msg.sender] = SupplyStorage[msg.sender].Add(amount);
 
-        IBEP20(token).transferFrom(msg.sender, address(this), amount);
-
-        Storage[msg.sender].Supply.Increase(token, amount);
+        IBEP20(TOKEN).transferFrom(msg.sender, address(this), amount);
     }
 
-    function Credit() public view returns (uint256)
+    function SupplyAsUSD() public view returns (uint256)
     {
-        (address[] memory Token, uint256[] memory Value) = Storage[msg.sender].Supply.Balance();
+        (, int256 Price, , ,) = AggregatorV3Interface(ORACLE).latestRoundData();
 
-        uint256 Result = 0;
-
-        for (uint256 I = 0; I < Token.length; I++)
-        {
-            int256 Price = AggregatorPrice(Token[I]);
-
-            if (Price == -1)
-                continue;
-
-            Result += uint256(Price) * Value[I]; // Fix the correct calculation
-        }
-
-        return Result;
+        return uint256(Price) * SupplyStorage[msg.sender]; 
     }
 
-    // ChainLink Aggregator Map
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+    // Status
+    bool private BorrowStatus;
+
+    function SetBorrowStatus(bool status) external OnlyOwner
+    {
+        BorrowStatus = status;
+
+        emit BorrowStatusChanged(status);
+    }
+
+    event BorrowStatusChanged(bool status);
+
+    // Aggregator Map
     mapping(address => address) private AggregatorMap;
 
     function AddToAggregatorMap(address token, address oracle) external OnlyOwner
@@ -104,5 +130,5 @@ contract Lend is Ownable
     }
 
     event AddedToBorrowMap(address indexed token);
-    event RemovedFromBorrowMap(address indexed token);
+    event RemovedFromBorrowMap(address indexed token);*/
 }

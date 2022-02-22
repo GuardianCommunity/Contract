@@ -4,7 +4,7 @@ pragma solidity ^0.8.6;
 
 import "./interface/AggregatorV3Interface.sol";
 
-abstract contract Oracle
+contract Oracle
 {
     mapping(address => address) private Storage;
 

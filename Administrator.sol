@@ -34,8 +34,10 @@ contract Administrator is IAdministrator
         Admin = msg.sender;
     }
 
-    function GetAdmin() override external view returns (address)
+    function GetAdministrator() override external view returns (address)
     {
         return Admin;
     }
+
+    event AdminChanged(address indexed OldAdmin, address indexed NewAdmin);
 }

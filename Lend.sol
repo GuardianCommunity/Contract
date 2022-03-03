@@ -12,11 +12,11 @@ contract Lend
 {
     using Math for uint256;
 
-    uint256 private FACTOR;
+    uint256 private immutable FACTOR;
 
-    address private TOKEN;
-    address private ORACLE;
-    address private TREASUERY;
+    address private immutable TOKEN;
+    address private immutable ORACLE;
+    address private immutable TREASUERY;
 
     constructor()
     {

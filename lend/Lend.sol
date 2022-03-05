@@ -16,27 +16,20 @@ contract Lend
     using Math for uint256;
     using Iterator for Iterator.Map;
 
+    /*
     struct TokenFactor
     {
         address Oracle;
         uint256 Collateral;
     }
 
-    mapping(address => bool) private PoolMap;
     mapping(address => TokenFactor) private TokenMap;
-    mapping(address => Iterator.Map) private SupplyMap;
+    
 
     uint256 public constant MIN_COLLATERAL = 20; // 20% Min Collateral Borrow
     uint256 public constant MAX_COLLATERAL = 70; // 70% Max Collateral Borrow
 
-    function Supply(address token, uint256 amount) external
-    {
-        require(IBEP20(token).allowance(msg.sender, address(this)) >= amount, "Supply: Approve");
 
-        IBEP20(token).transferFrom(msg.sender, address(this), amount);
-
-        SupplyMap[msg.sender].Increase(token, amount);
-    }
 
     function Withdrawal(address token, uint256 amount) external
     {
@@ -66,44 +59,99 @@ contract Lend
         }
     }
 
-    function Borrow(address token, uint256 amount) external
-    {
-        require(IsInAssetMap(token), "Borrow: Invalid Token");
+    
+    // Lend
+    mapping(address => Iterator.Map) private SupplyMap;
+    mapping(address => Iterator.Map) private BorrowMap;
 
-        IBEP20(token).transfer(msg.sender, amount);
+    function Supply(address token, uint256 amount) external
+    {
+        require(IBEP20(token).allowance(msg.sender, address(this)) >= amount, "Supply: Approve");
+
+        IBEP20(token).transferFrom(msg.sender, address(this), amount);
+
+        SupplyMap[msg.sender].Increase(token, amount);
+    }
+
+    function Borrow(address asset, uint256 amount) external
+    {
+        require(AssetIsInMap(asset), "Borrow: Invalid Asset");
+
+        require(AssetBalanceMap[asset] >= amount, "Borrow: Asset Amount");
+
+        uint256 RequestValue = 100; // Requested amount must be equal or lower than colleteral amount + Old Borrowed Amount
+
+        IBEP20(asset).transfer(msg.sender, amount);
+
+        BorrowMap[msg.sender][asset].Add(amount);
+    }
+
+
+    */
+
+    // Asset Stake
+    mapping(address => uint256) private AssetBalanceMap;
+    mapping(address => mapping(address => uint256)) private AssetStakeMap;
+
+    function AssetStake(address asset, uint256 amount) external
+    {
+        require(IBEP20(asset).allowance(msg.sender, address(this)) >= amount, "AssetStake: Allowance");
+
+        IBEP20(asset).transferFrom(msg.sender, address(this), amount);
+
+        AssetStakeMap[msg.sender][asset].Add(amount);
+
+        AssetBalanceMap[asset].Add(amount);
+    }
+
+    function AssetUnstake(address asset, uint256 amount) external
+    {
+        require(AssetBalanceMap[asset] >= amount, "AssetUnstake: Amount");
+
+        AssetStakeMap[msg.sender][asset].Sub(amount);
+
+        IBEP20(asset).transfer(msg.sender, amount);
+
+        AssetBalanceMap[asset].Sub(amount);
+    }
+
+    function AssetBalance(address asset) external view returns(uint256)
+    {
+        return AssetBalanceMap[asset];
     }
 
     // Asset Map
-    mapping(address => bool) private AssetMap;
-
-    function AddToAssetMap(address token) external OnlyAdmin
+    struct AssetFactor
     {
-        AssetMap[token] = true;
-
-        emit AddedToAssetMap(token);
+        address Oracle;
+        uint32 InterestRate;
+        uint256 CollateralRate;
     }
 
-    function RemoveFromAssetMap(address token) external OnlyAdmin
-    {
-        AssetMap[token] = false;
+    mapping(address => AssetFactor) private AssetMap;
 
-        emit RemovedFromAssetMap(token);
+    function AssetMapUpdate(address asset, address oracle, uint32 interestRate, uint256 collateralRate) external AdminOnly
+    {
+        AssetMap[asset].Oracle = oracle;
+        AssetMap[asset].InterestRate = interestRate;
+        AssetMap[asset].CollateralRate = collateralRate;
+
+        emit AssetMapUpdated(asset, oracle, interestRate, collateralRate);
     }
 
-    function IsInAssetMap(address token) internal view returns(bool)
+    function AssetIsInMap(address asset) internal view returns(bool)
     {
-        return AssetMap[token];
+        return AssetMap[asset].Oracle != address(0);
     }
 
-    event AddedToAssetMap(address indexed token);
-    event RemovedFromAssetMap(address indexed token);
+    event AssetMapUpdated(address indexed Asset, address Oracle, uint32 InterestRate, uint256 CollateralRate);
 
     // Modifier
     address private constant ADMINISTRATOR = address(0);
 
-    modifier OnlyAdmin()
+    modifier AdminOnly()
     {
-        require(IAdministrator(ADMINISTRATOR).IsAdmin(msg.sender), "OnlyAdmin: Only Admin");
+        require(IAdministrator(ADMINISTRATOR).IsAdmin(msg.sender), "AdminOnly: Admin Only");
 
         _;
     }

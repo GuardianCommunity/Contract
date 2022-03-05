@@ -38,12 +38,12 @@ library Iterator
         }
     }
 
-    function ValueMap(Map storage map) internal view returns (address[] memory T, uint256[] memory V)
+    function ValueMap(Map storage map) internal view returns (address[] memory _Key, uint256[] memory _Value)
     {
         for (uint256 I = 0; I < map.K.length; I++)
         {
-            T[I] = map.K[I];
-            V[I] = map.V[map.K[I]];
+            _Key[I] = map.K[I];
+            _Value[I] = map.V[map.K[I]];
         }
     }
 

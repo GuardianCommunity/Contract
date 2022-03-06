@@ -17,20 +17,6 @@ contract Lend
     using Iterator for Iterator.Map;
 
     /*
-    struct TokenFactor
-    {
-        address Oracle;
-        uint256 Collateral;
-    }
-
-    mapping(address => TokenFactor) private TokenMap;
-    
-
-    uint256 public constant MIN_COLLATERAL = 20; // 20% Min Collateral Borrow
-    uint256 public constant MAX_COLLATERAL = 70; // 70% Max Collateral Borrow
-
-
-
     function Withdrawal(address token, uint256 amount) external
     {
         require(SupplyMap[msg.sender].Value(token) >= amount, "Withdrawal: Amount");
@@ -39,8 +25,6 @@ contract Lend
 
         IBEP20(token).transfer(msg.sender, amount);
     }
-
-
 
     function SupplyAsCollateral() internal view returns (uint256 Result)
     {
@@ -58,7 +42,6 @@ contract Lend
             }
         }
     }
-
     
     // Lend
     mapping(address => Iterator.Map) private SupplyMap;
@@ -85,8 +68,6 @@ contract Lend
 
         BorrowMap[msg.sender][asset].Add(amount);
     }
-
-
     */
 
     // Asset Stake
@@ -102,6 +83,8 @@ contract Lend
         AssetStakeMap[msg.sender][asset].Add(amount);
 
         AssetBalanceMap[asset].Add(amount);
+
+        emit AssetStaked(asset, amount);
     }
 
     function AssetUnstake(address asset, uint256 amount) external
@@ -113,6 +96,8 @@ contract Lend
         IBEP20(asset).transfer(msg.sender, amount);
 
         AssetBalanceMap[asset].Sub(amount);
+
+        emit AssetUnstaked(asset, amount);
     }
 
     function AssetBalance(address asset) external view returns(uint256)
@@ -120,18 +105,29 @@ contract Lend
         return AssetBalanceMap[asset];
     }
 
+    event AssetStaked(address indexed Asset, uint256 Amount);
+    event AssetUnstaked(address indexed Asset, uint256 Amount);
+
     // Asset Map
+    uint32 private constant INTEREST_RATE_MIN = 10; // 10% Min Interest Rate
+    uint32 private constant INTEREST_RATE_MAX = 90; // 90% Max Interest Rate
+    uint32 private constant COLLATERAL_RATE_MIN = 10; // 10% Min Collateral Rate
+    uint32 private constant COLLATERAL_RATE_MAX = 70; // 70% Max Collateral Rate
+
     struct AssetFactor
     {
         address Oracle;
         uint32 InterestRate;
-        uint256 CollateralRate;
+        uint32 CollateralRate;
     }
 
     mapping(address => AssetFactor) private AssetMap;
 
-    function AssetMapUpdate(address asset, address oracle, uint32 interestRate, uint256 collateralRate) external AdminOnly
+    function AssetMapUpdate(address asset, address oracle, uint32 interestRate, uint32 collateralRate) external AdminOnly
     {
+        require(interestRate > INTEREST_RATE_MIN && interestRate < INTEREST_RATE_MAX, "AssetMapUpdate: Interest Rate");
+        require(collateralRate > COLLATERAL_RATE_MIN && collateralRate < COLLATERAL_RATE_MAX, "AssetMapUpdate: Collateral Rate");
+
         AssetMap[asset].Oracle = oracle;
         AssetMap[asset].InterestRate = interestRate;
         AssetMap[asset].CollateralRate = collateralRate;
@@ -144,7 +140,7 @@ contract Lend
         return AssetMap[asset].Oracle != address(0);
     }
 
-    event AssetMapUpdated(address indexed Asset, address Oracle, uint32 InterestRate, uint256 CollateralRate);
+    event AssetMapUpdated(address indexed Asset, address Oracle, uint32 InterestRate, uint32 CollateralRate);
 
     // Modifier
     address private constant ADMINISTRATOR = address(0);

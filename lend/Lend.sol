@@ -9,8 +9,6 @@ import "../interface/AggregatorV3Interface.sol";
 import "../library/Math.sol";
 import "../library/Iterator.sol";
 
-// ChainLink BTC/USD: 0x264990fbd0A4796A3E3d8E37C4d5F87a3aCa5Ebf
-
 contract Lend
 {
     using Math for uint256;
@@ -109,8 +107,8 @@ contract Lend
     event AssetUnstaked(address indexed Asset, uint256 Amount);
 
     // Asset Map
-    uint32 private constant INTEREST_RATE_MIN = 10; // 10% Min Interest Rate
-    uint32 private constant INTEREST_RATE_MAX = 90; // 90% Max Interest Rate
+    uint32 private constant INTEREST_RATE_MIN = 1; // 1% Min Interest Rate
+    uint32 private constant INTEREST_RATE_MAX = 100; // 100% Max Interest Rate
     uint32 private constant COLLATERAL_RATE_MIN = 10; // 10% Min Collateral Rate
     uint32 private constant COLLATERAL_RATE_MAX = 70; // 70% Max Collateral Rate
 

@@ -15,15 +15,6 @@ contract Lend
     using Iterator for Iterator.Map;
 
     /*
-    function Withdrawal(address token, uint256 amount) external
-    {
-        require(SupplyMap[msg.sender].Value(token) >= amount, "Withdrawal: Amount");
-
-        SupplyMap[msg.sender].Decrease(token, amount);
-
-        IBEP20(token).transfer(msg.sender, amount);
-    }
-
     function SupplyAsCollateral() internal view returns (uint256 Result)
     {
         (address[] memory Key, uint256[] memory Value) = SupplyMap[msg.sender].ValueMap();
@@ -40,21 +31,10 @@ contract Lend
             }
         }
     }
-    
-    // Lend
-    mapping(address => Iterator.Map) private SupplyMap;
+   
     mapping(address => Iterator.Map) private BorrowMap;
 
-    function Supply(address token, uint256 amount) external
-    {
-        require(IBEP20(token).allowance(msg.sender, address(this)) >= amount, "Supply: Approve");
-
-        IBEP20(token).transferFrom(msg.sender, address(this), amount);
-
-        SupplyMap[msg.sender].Increase(token, amount);
-    }
-
-    function Borrow(address asset, uint256 amount) external
+    function AssetBorrow(address asset, uint256 amount) external
     {
         require(AssetIsInMap(asset), "Borrow: Invalid Asset");
 
@@ -70,10 +50,35 @@ contract Lend
 
     // Asset Stake
     mapping(address => uint256) private AssetBalanceMap;
+    mapping(address => Iterator.Map) private AssetSupplyMap;
     mapping(address => mapping(address => uint256)) private AssetStakeMap;
+
+    function AssetDeposit(address asset, uint256 amount) external
+    {
+        require(AssetIsInMap(asset), "AssetDeposit: Invalid Asset");
+
+        require(IBEP20(asset).allowance(msg.sender, address(this)) >= amount, "AssetDeposit: Approve");
+
+        IBEP20(asset).transferFrom(msg.sender, address(this), amount);
+
+        AssetSupplyMap[msg.sender].Increase(asset, amount);
+    }
+
+    function AssetWithdrawal(address asset, uint256 amount) external
+    {
+        require(AssetIsInMap(asset), "AssetWithdrawal: Invalid Asset");
+
+        require(AssetSupplyMap[msg.sender].Value(asset) >= amount, "AssetWithdrawal: Amount");
+
+        AssetSupplyMap[msg.sender].Decrease(asset, amount);
+
+        IBEP20(asset).transfer(msg.sender, amount);
+    }
 
     function AssetStake(address asset, uint256 amount) external
     {
+        require(AssetIsInMap(asset), "AssetStake: Invalid Asset");
+
         require(IBEP20(asset).allowance(msg.sender, address(this)) >= amount, "AssetStake: Allowance");
 
         IBEP20(asset).transferFrom(msg.sender, address(this), amount);
@@ -87,6 +92,8 @@ contract Lend
 
     function AssetUnstake(address asset, uint256 amount) external
     {
+        require(AssetIsInMap(asset), "AssetUnstake: Invalid Asset");
+
         require(AssetBalanceMap[asset] >= amount, "AssetUnstake: Amount");
 
         AssetStakeMap[msg.sender][asset].Sub(amount);
@@ -124,6 +131,7 @@ contract Lend
     function AssetMapUpdate(address asset, address oracle, uint32 interestRate, uint32 collateralRate) external AdminOnly
     {
         require(interestRate > INTEREST_RATE_MIN && interestRate < INTEREST_RATE_MAX, "AssetMapUpdate: Interest Rate");
+
         require(collateralRate > COLLATERAL_RATE_MIN && collateralRate < COLLATERAL_RATE_MAX, "AssetMapUpdate: Collateral Rate");
 
         AssetMap[asset].Oracle = oracle;
@@ -141,11 +149,10 @@ contract Lend
     event AssetMapUpdated(address indexed Asset, address Oracle, uint32 InterestRate, uint32 CollateralRate);
 
     // Modifier
-    address private constant ADMINISTRATOR = address(0);
-
     modifier AdminOnly()
     {
-        require(IAdministrator(ADMINISTRATOR).IsAdmin(msg.sender), "AdminOnly: Admin Only");
+        // Administrator Contract Address
+        require(IAdministrator(address(0)).IsAdmin(msg.sender), "AdminOnly: Admin Only");
 
         _;
     }

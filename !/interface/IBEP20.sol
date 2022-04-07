@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.6;
+pragma solidity ^0.8.10;
 
 interface IBEP20
 {
@@ -15,6 +15,6 @@ interface IBEP20
     function allowance(address owner, address spender) external view returns (uint256);
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
 
-    event Transfer(address indexed from, address indexed to, uint256 value);
-    event Approval(address indexed owner, address indexed spender, uint256 value);
+    event Transfer(address indexed From, address indexed To, uint256 Value);
+    event Approval(address indexed Owner, address indexed Spender, uint256 Value);
 }

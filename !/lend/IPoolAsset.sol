@@ -7,7 +7,6 @@ interface IPoolAsset
     function Price() external view returns (int256);
     function Balance() external view returns (uint256);
     function InterestRate() external view returns (uint256);
-    function BalanceAsUSD() external view returns (uint256);
 
     function Stake(uint256) external;
     function UnStake(uint256) external;

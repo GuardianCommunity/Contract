@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.10;
 
@@ -10,20 +10,14 @@ import "../interface/AggregatorV3Interface.sol";
 
 contract CollateralAsset is ICollateralAsset
 {
-    address private immutable CONTRACT_ASSET;
-    address private immutable CONTRACT_ORACLE;
-    uint256 private immutable CONTRACT_COLLATERAL;
-    address private immutable CONTRACT_ADMINISTRATOR;
+    uint256 private constant CONTRACT_COLLATERAL = 65;
+    address private constant CONTRACT_ASSET = address(0);
+    address private constant CONTRACT_ORACLE = address(0);
+    address private constant CONTRACT_FACTORY = address(0);
+    address private constant CONTRACT_ADMINISTRATOR = address(0);
 
-    constructor(address asset, address oracle, uint256 collateral, address administrator)
-    {
-        CONTRACT_ASSET = asset;
-        CONTRACT_ORACLE = oracle;
-        CONTRACT_COLLATERAL = collateral;
-        CONTRACT_ADMINISTRATOR = administrator;
-    }
+    bool private AssetStatus;
 
-    bool private IsDisable;
     mapping(address => uint256) private AssetBalance;
 
     function Price() override external view returns (int256 Result)
@@ -36,16 +30,13 @@ contract CollateralAsset is ICollateralAsset
         return AssetBalance[msg.sender];
     }
 
-    function Collateral() override external view returns (uint256)
+    function Collateral() override external pure returns (uint256)
     {
         return CONTRACT_COLLATERAL;
     }
 
     function BalanceAsUSD() override external view returns (uint256)
     {
-        if (AssetBalance[msg.sender] == 0)
-            return 0;
-
         (, int256 Result, , ,) = AggregatorV3Interface(CONTRACT_ORACLE).latestRoundData();
 
         return AssetBalance[msg.sender] * uint256(Result);
@@ -53,23 +44,30 @@ contract CollateralAsset is ICollateralAsset
 
     function Enable() override external AdminOnly
     {
-        IsDisable = false;
+        AssetStatus = true;
+
+        emit Enabled();
     }
 
     function Disable() override external AdminOnly
     {
-        IsDisable = true;
+        AssetStatus = false;
+
+        emit Disabled();
     }
 
     function Deposit(uint256 amount) override external
     {
-        require(!IsDisable, "Deposit: Disable");
+        require(AssetStatus, "Deposit: Status Disable");
 
         require(IBEP20(CONTRACT_ASSET).allowance(msg.sender, address(this)) >= amount, "Deposit: Approve");
 
         IBEP20(CONTRACT_ASSET).transferFrom(msg.sender, address(this), amount);
 
-        AssetBalance[msg.sender] += amount;
+        unchecked
+        {
+            AssetBalance[msg.sender] += amount;
+        }
 
         emit Deposited(msg.sender, amount);
     }
@@ -78,7 +76,7 @@ contract CollateralAsset is ICollateralAsset
     {
         require(AssetBalance[msg.sender] >= amount, "Withdraw: Amount");
 
-        // QQ
+        // CHECK FACTORY
 
         IBEP20(CONTRACT_ASSET).transfer(msg.sender, amount);
 

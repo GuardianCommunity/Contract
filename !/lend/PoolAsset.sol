@@ -10,20 +10,14 @@ import "../interface/AggregatorV3Interface.sol";
 
 contract PoolAsset is IPoolAsset
 {
-    address private immutable CONTRACT_ASSET;
-    address private immutable CONTRACT_ORACLE;
-    address private immutable CONTRACT_FACTORY;
-    uint256 private immutable CONTRACT_INTEREST_RATE;
-    address private immutable CONTRACT_ADMINISTRATOR;
+    uint256 private constant CONTRACT_INTEREST_RATE = 65;
+    address private constant CONTRACT_ASSET = address(0);
+    address private constant CONTRACT_ORACLE = address(0);
+    address private constant CONTRACT_FACTORY = address(0);
+    address private constant CONTRACT_ADMINISTRATOR = address(0);
 
-    constructor(address asset, address oracle, address factory, uint256 interestRate, address administrator)
-    {
-        CONTRACT_ASSET = asset;
-        CONTRACT_ORACLE = oracle;
-        CONTRACT_FACTORY = factory;
-        CONTRACT_INTEREST_RATE = interestRate;
-        CONTRACT_ADMINISTRATOR = administrator;
-    }
+    uint256 private AssetSupply;
+    uint256 private AssetBorrow;
 
     mapping(address => uint256) private AssetBalance;
 
@@ -39,17 +33,7 @@ contract PoolAsset is IPoolAsset
 
     function InterestRate() override external view returns (uint256)
     {
-        return CONTRACT_INTEREST_RATE;
-    }
-
-    function BalanceAsUSD() override external view returns (uint256)
-    {
-        if (AssetBalance[msg.sender] == 0)
-            return 0;
-
-        (, int256 Result, , ,) = AggregatorV3Interface(CONTRACT_ORACLE).latestRoundData();
-
-        return AssetBalance[msg.sender] * uint256(Result);
+        return CONTRACT_INTEREST_RATE - (((AssetSupply - AssetBorrow ) / 100) * CONTRACT_INTEREST_RATE);
     }
 
     function Stake(uint256 amount) override external
@@ -67,7 +51,11 @@ contract PoolAsset is IPoolAsset
     {
         require(AssetBalance[msg.sender] >= amount, "UnStake: Amount");
 
+        require((AssetSupply - AssetBorrow) >= amount, "UnStake: Low Supply");
+
         IBEP20(CONTRACT_ASSET).transfer(msg.sender, amount);
+
+
 
         unchecked
         {

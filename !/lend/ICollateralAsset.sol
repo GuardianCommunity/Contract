@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.10;
 
@@ -14,6 +14,9 @@ interface ICollateralAsset
 
     function Deposit(uint256) external;
     function Withdraw(uint256) external;
+
+    event Enabled();
+    event Disabled();
 
     event Deposited(address indexed Owner, uint256 Amount);
     event Withdrawn(address indexed Owner, uint256 Amount);

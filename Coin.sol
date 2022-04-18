@@ -1,14 +1,15 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.6;
+pragma solidity ^0.8.10;
 
-import "./library/Math.sol";
 import "./interface/IBEP20.sol";
+
+/*
+    Overflow is detected automatically since 0.8.0
+*/
 
 contract Coin is IBEP20
 {
-    using Math for uint256;
-
     mapping(address => uint256) private Balance;
     mapping(address => mapping(address => uint256)) private Allowance;
 
@@ -60,10 +61,10 @@ contract Coin is IBEP20
 
     function transfer(address recipient, uint256 amount) override external returns (bool)
     {
-        Balance[msg.sender] = Balance[msg.sender].Sub(amount);
+        Balance[recipient] += amount;
 
-        Balance[recipient] = Balance[recipient].Add(amount);
-
+        Balance[msg.sender] -= amount;
+        
         emit Transfer(msg.sender, recipient, amount);
 
         return true;
@@ -76,15 +77,17 @@ contract Coin is IBEP20
 
     function transferFrom(address sender, address recipient, uint256 amount) override external returns (bool)
     {
-        Balance[sender] = Balance[sender].Sub(amount);
+        uint256 CurrentAllowance = Allowance[sender][msg.sender] - amount;
 
-        Allowance[sender][msg.sender] = Allowance[sender][msg.sender].Sub(amount);
+        Allowance[sender][msg.sender] = CurrentAllowance;
 
-        Balance[recipient] = Balance[recipient].Add(amount);
+        emit Approval(sender, msg.sender, CurrentAllowance);
+
+        Balance[sender] -= amount;
+
+        Balance[recipient] += amount;
 
         emit Transfer(sender, recipient, amount);
-
-        emit Approval(sender, msg.sender, amount);
 
         return true;
     }
@@ -92,5 +95,15 @@ contract Coin is IBEP20
     function totalBurn() external view returns (uint256)
     {
         return Balance[address(0)];
+    }
+
+    receive() external payable
+    {
+        revert();
+    }
+
+    fallback() external payable
+    {
+        revert();
     }
 }

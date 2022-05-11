@@ -32,7 +32,7 @@ contract Coin is IBEP20
 
     function name() override external pure returns (string memory)
     {
-        return "Guardian";
+        return "Guardian Coin";
     }
 
     function totalSupply() override external pure returns (uint256)
@@ -42,7 +42,7 @@ contract Coin is IBEP20
 
     function symbol() override external pure returns (string memory)
     {
-        return "G";
+        return "GC";
     }
 
     function balanceOf(address account) override external view returns (uint256)
